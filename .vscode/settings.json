@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./BayesianStarSolver/BayesianEmceeStarSolver/DataRead",
+        "./BayesianStarSolver/BayesianEmceeStarSolver/DataRead",
+        "./BayesianStarSolver/BayesianEmceeStarSolver/DataRead"
+    ]
+}
