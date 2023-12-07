@@ -1,4 +1,3 @@
-import math
 import emcee
 import numpy as np
 
@@ -18,13 +17,8 @@ Methods
                                 
 """
 
-def cost_function(x, t, e):
-    s = 0.0
-    for i in range(len(x)):
-        s += math.pow(x[i] - t[i], 2) / math.pow(e[i], 2)
-    return s
 
-def log_likelihood(theta, values, error, model):
+def log_likelihood(theta, values, error, model, cost_function):
     """
     
     The log_likelihood function computes the log-likelihood given certain parameters 
@@ -54,7 +48,7 @@ def log_prior(theta, ranges):
             return -np.inf
     return 0.0
 
-def log_probability(theta, values, error, ranges, model):
+def log_probability(theta, values, error, ranges, model, cost_function):
     """
     The log_probability function computes the overall probability (posterior) 
     for given parameters (theta) by summing the log prior and the log likelihood.
@@ -62,9 +56,9 @@ def log_probability(theta, values, error, ranges, model):
     lp = log_prior(theta, ranges)
     if not np.isfinite(lp):
         return -np.inf
-    return lp + log_likelihood(theta, values, error, model)
+    return lp + log_likelihood(theta, values, error, model, cost_function)
 
-def estimateStellarParameters(parameters, nwalkers, runs, burnin, model, progress = False):
+def estimateStellarParameters(parameters, nwalkers, runs, burnin, model, cost_function, progress = False):
     """
     This method is designed to estimate the stellar parameters of a star using a MCMC method.
     
@@ -93,7 +87,7 @@ def estimateStellarParameters(parameters, nwalkers, runs, burnin, model, progres
         pos[:, i] = np.random.uniform(*ranges[i], size=nwalkers)
 
     # Passing scalar values to the sampler
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args=(initValues, errorValues, ranges, model))
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args=(initValues, errorValues, ranges, model, cost_function))
     sampler.run_mcmc(pos, runs, progress=progress)
 
 

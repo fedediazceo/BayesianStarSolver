@@ -6,9 +6,15 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
 import corner
-
-
+import math
 from BayesianStarSolver.BayesianEmceeStarSolver.DataRead import zorec_functions
+
+
+def cost_function(x, t, e):
+    s = 0.0
+    for i in range(len(x)):
+        s += math.pow(x[i] - t[i], 2) / math.pow(e[i], 2)
+    return s
 
 # Read the cefiro table, add additional parameters, and show ranges for those parameters
 
@@ -44,7 +50,7 @@ def run_test(i):
     parameters["errorValues"] = zorecErrors[i]
     parameters["ranges"] = [M_range, Xc_range]
     
-    samples, bestEstimates = MCMCStarSolver.estimateStellarParameters(parameters, nwalkers, runs, burnin, model.get_stellar_params, False)
+    samples, bestEstimates = MCMCStarSolver.estimateStellarParameters(parameters, nwalkers, runs, burnin, model.get_stellar_params, cost_function, False)
     
     title = f"Original: M={zorecMassValues[i]}"
     
