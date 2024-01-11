@@ -177,7 +177,7 @@ def select_slice(grid, current_alfa, current_p, current_feh):
 
 
 ####################################################################################################3
-def plot_MS_rough(grid, plotdir):
+def plot_MS_rough(grid, plotdir, estimateGridDensity = False):
     """
     Plot an HRD and a Xc-M plane for each combination of alphaMLT, [Fe/H] and rotation period
 
@@ -219,6 +219,12 @@ def plot_MS_rough(grid, plotdir):
                         dpi=300)
                 plt.close()
 
+                validGrid = ""
+                if(estimateGridDensity == True):
+                    if estimate_grid_density(subgrid, "{}/rectangle_alfa{}_feh{}_p{}.jpg".format(
+                        plotdir, current_alfa, current_feh, current_p)):
+                        validGrid = "_ISVALID"
+
                 plt.scatter(subgrid["Xc"], subgrid["M"], c=subgrid["R"])
                 plt.gca().invert_xaxis()
                 plt.title(r"$\alpha=${}, [Fe/H]={}, $P=${}".format(
@@ -227,10 +233,73 @@ def plot_MS_rough(grid, plotdir):
                 plt.ylabel(r"$M/M_\odot$")
                 cbar = plt.colorbar()
                 cbar.set_label(r"$R/R_\odot$")
-                plt.savefig("{}/rectangle_alfa{}_feh{}_p{}.jpg".format(
-                        plotdir, current_alfa, current_feh, current_p),
+                plt.savefig("{}/rectangle_alfa{}_feh{}_p{}{}.jpg".format(
+                        plotdir, current_alfa, current_feh, current_p, validGrid),
                         dpi=300)
                 plt.close()
+
+####################################################################################################3
+def get_valid_density_parameters(grid):
+    """
+    Get valid parameters from the model that have a good density of values
+
+    Input:  grid        (pandas df)         contents of the grid
+    Output: grid parameters list tuples (list[tuple])         alfa, p, feh 
+    """
+
+    parametersList = []
+
+    # Select a specific "slice" of the grid
+    for current_alfa in sorted(list(dict.fromkeys(grid["alfa"]))):
+        for current_p in sorted(list(dict.fromkeys(grid["p"]))):
+            for current_feh in sorted(list(dict.fromkeys(grid["feh"]))):
+
+                #print("We do {} {} {}".format(current_alfa, current_p, current_feh))
+
+                # Isolate a slice
+                subgrid = grid.loc[  (grid["alfa"] == current_alfa)
+                                  & (grid["p"] == current_p)
+                                  & (grid["feh"] == current_feh)]
+
+                # Isolate the MS
+                if len(subgrid["Xc"]) > 0:
+                    max_xc = subgrid["Xc"].max()
+                else:
+                    max_xc = 1.0
+                #print("MAX XC", max_xc, "out of", len(subgrid["Xc"]))
+                subgrid = subgrid.loc[(subgrid["Xc"] < max_xc - 1e-2) & (subgrid["Xc"] > 1e-4)]
+
+                validGrid = ""
+                if estimate_grid_density(subgrid, "rectangle_alfa{}_feh{}_p{}.jpg".format(
+                    current_alfa, current_feh, current_p)):
+                    validParameters = current_alfa, current_p, current_feh
+                    parametersList.append(validParameters)
+    
+    return parametersList
+
+def estimate_grid_density(subgrid, gridName):
+    # Define the Xc range and the desired coverage threshold
+    xc_range = (0.0, 0.7)
+    coverage_threshold_xc = 0.8  # 80%
+
+    countCoverage = 0
+    massLength = 0
+    # Iterate over each unique mass value
+    for mass in subgrid['M'].unique():
+        xc_values = subgrid[subgrid['M'] == mass]['Xc']
+        xc_coverage = np.histogram(xc_values, bins=100, range=xc_range)[0] > 0
+        coverage = np.sum(xc_coverage) / len(xc_coverage)
+        #print(f"Mass {mass}: Coverage = {coverage*100:.2f}%")
+        massLength = massLength + 1
+        if coverage >= coverage_threshold_xc:
+            countCoverage = countCoverage + 1
+ 
+    if massLength > 0 and countCoverage/massLength >= 0.8:
+        #print("{} Is Valid {}".format(gridName,countCoverage/massLength))
+        return True
+    else:
+        #print("{} Is NOT Valid".format(gridName))
+        return False
 
 ########################################################################################################
 

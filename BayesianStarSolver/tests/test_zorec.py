@@ -1,14 +1,13 @@
 from concurrent.futures import ProcessPoolExecutor
-from BayesianStarSolver.BayesianEmceeStarSolver.DataRead import cefiro_functions
-from BayesianStarSolver.BayesianEmceeStarSolver.DataRead import cefiro_interpolation
-from BayesianStarSolver.BayesianEmceeStarSolver.MCMC import MCMCStarSolver
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
 import corner
 import math
 from BayesianStarSolver.BayesianEmceeStarSolver.DataRead import zorec_functions
-
+from BayesianStarSolver.BayesianEmceeStarSolver.DataRead import cefiro_functions
+from BayesianStarSolver.BayesianEmceeStarSolver.DataRead import cefiro_interpolation
+from BayesianStarSolver.BayesianEmceeStarSolver.MCMC import MCMCStarSolver
 
 def cost_function(x, t, e):
     s = 0.0
@@ -22,15 +21,26 @@ cefiro2_all = cefiro_functions.read_cefiro("BayesianStarSolver/tests/cefiro2-24d
 cefiro_functions.additional_cefiro("BayesianStarSolver/tests/roche_radii", cefiro2_all)
 cefiro_functions.show_ranges(cefiro2_all, ["M", "feh", "alfa", "p", "ov", "t"])
 
-# Isolate slices
-slice_50_0_0 = cefiro_functions.select_slice(cefiro2_all,50, 0, 0)
+#cefiro_functions.plot_MS_rough(cefiro2_all, "BayesianStarSolver/tests/cefiroGrid", True);
+
+validParameters = cefiro_functions.get_valid_density_parameters(cefiro2_all)
+
+print(len(validParameters))
+
+print(validParameters[0][0],validParameters[0][1],validParameters[0][2])
+
+# Isolate VALID slices
+slices = []
+for i in range(len(validParameters)):
+    slices.append(cefiro_functions.select_slice(cefiro2_all,validParameters[i][0], validParameters[i][1], validParameters[i][2]))
+
+sliceNumber = 3
 
 # extract original data from the grid
 keys = ["Teff", "L"]  
-masses = sorted(list(dict.fromkeys(slice_50_0_0["M"])))
-extracted_values, extracted_grid_points = cefiro_functions.extract_grid_values(slice_50_0_0, masses, keys)
-
-model = cefiro_interpolation.InterpolatedModel(slice_50_0_0, 1000, ["Teff", "L"])
+masses = sorted(list(dict.fromkeys(slices[sliceNumber]["M"])))
+extracted_values, extracted_grid_points = cefiro_functions.extract_grid_values(slices[sliceNumber], masses, keys)
+model = cefiro_interpolation.InterpolatedModel(slices[sliceNumber], 1000, ["Teff", "L"])
 
 # test_input = [0.279526, 2.050196]
 # result = modelInstance.get_stellar_params(test_input)
@@ -70,7 +80,8 @@ with ProcessPoolExecutor() as executor:
 # Generate corner plots sequentially after all tests are done
 for i in range(TEST):
     figure = corner.corner(sampledValues[i], labels=[f"$M$({zorecMassValues[i]})", "$Xc$"], quantiles=[0.16, 0.5, 0.84], show_titles=True, title=titles[i])
-    figure.savefig(f"plots/corner_plot_{i}.png")
+    figure.savefig(f"plots/corner_plot_{i}_{validParameters[sliceNumber]}.png")
+
 ###############################################################################
 ###########################        PLOTS     ##################################
 ###############################################################################
@@ -92,7 +103,7 @@ plt.title('Interpolated Teff values')
 plt.ylabel('M values')
 plt.xlabel('Xc values')
 plt.xlim(max(model.new_grid_points["xc_points"]), min(model.new_grid_points["xc_points"]))  # Reversing the x-axis
-plt.savefig('plots/Interpolated_Teff_values.png')
+plt.savefig('plots/Interpolated_Teff_values_{}.png'.format(validParameters[sliceNumber]))
 
 # Using pcolormesh for Luminosity
 plt.figure(figsize=(10,7))
@@ -102,7 +113,7 @@ plt.title('Interpolated Luminosity values')
 plt.ylabel('M values')
 plt.xlabel('Xc values')
 plt.xlim(max(model.new_grid_points["xc_points"]), min(model.new_grid_points["xc_points"]))  # Reversing the x-axis
-plt.savefig('plots/Interpolated_Luminosity_values.png')
+plt.savefig('plots/Interpolated_Luminosity_values_{}.png'.format(validParameters[sliceNumber]))
 
 # Using pcolormesh for logg
 # plt.figure(figsize=(10,7))
@@ -124,7 +135,7 @@ plt.xlabel("Xc")
 plt.ylabel("Mass")
 plt.xlim(max(extracted_grid_points["Xc"]), min(extracted_grid_points["Xc"]))  # Reversing the x-axis
 plt.title("Teff vs Xc and Mass")
-plt.savefig('plots/Cefiro_Teff-Xc-M.png')
+plt.savefig('plots/Cefiro_Teff-Xc-M_{}.png'.format(validParameters[sliceNumber]))
 
 # Plot for L values
 plt.figure(figsize=(10, 6))
@@ -136,4 +147,4 @@ plt.xlabel("Xc")
 plt.ylabel("Mass")
 plt.xlim(max(extracted_grid_points["Xc"]), min(extracted_grid_points["Xc"]))  # Reversing the x-axis
 plt.title("L vs Xc and Mass")
-plt.savefig('plots/Cefiro_L-Xc-M.png')
+plt.savefig('plots/Cefiro_L-Xc-M_{}.png'.format(validParameters[sliceNumber]))
