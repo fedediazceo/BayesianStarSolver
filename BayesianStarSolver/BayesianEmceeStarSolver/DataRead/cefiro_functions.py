@@ -326,18 +326,28 @@ def extract_grid_values(cefiro2_all, masses, keys):
     # Initialize an empty dictionary to store the results
     values_dict = {key: [] for key in keys}
     grid_points = {"M": [], "Xc": []}
-    
+
+    itams = None
+    izams = None
+
     for M in masses:
         subgrid = cefiro2_all.loc[(cefiro2_all["M"] == M)]
         xcs = subgrid["Xc"].tolist()
-        
+
         for i in range(len(xcs) - 1):
             if ((xcs[i] - (max_xc - 0.0015)) * (xcs[i + 1] - (max_xc - 0.0015))) < 0:
                 izams = i - 11
             if ((xcs[i] - 1e-4) * (xcs[i + 1] - 1e-4)) < 0:
                 itams = i + 2
                 break
-
+        
+        if izams is None:
+            izams = 0
+        
+        if itams is None:
+            itams = len(xcs) - 1
+        
+        #print("for mass {} xc length {} izams {} - {},itams {} - {}".format(M,len(xcs), izamsCount, izams, itamsCount, itams))        
         # Extract values for each key and add to the dictionary
         for key in keys:
             values = subgrid[key].tolist()[izams:itams]

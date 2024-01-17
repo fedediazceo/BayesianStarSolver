@@ -66,6 +66,9 @@ class InterpolatedModel:
         # Dictionary to store values for each parameter
         reg_values = {param: [] for param in self.parameters}
 
+        itams = None
+        izams = None
+
         # Loop through each unique mass value
         for M in masses:
             # Filter data for the current mass
@@ -74,13 +77,24 @@ class InterpolatedModel:
             # Extract Xc values
             xcs = subgrid["Xc"].tolist()
 
+            izamsCount = 0
+            itamsCount = 0
+
             # Identify regions in the data for interpolation
             for i in range(len(xcs) - 1):
                 if ((xcs[i] - (max_xc - 0.0015)) * (xcs[i + 1] - (max_xc - 0.0015))) < 0:
+                    izamsCount = izamsCount + 1
                     izams = i - 11
                 if ((xcs[i] - 1e-4) * (xcs[i + 1] - 1e-4)) < 0:
+                    itamsCount = itamsCount + 1
                     itams = i + 2
                     break
+
+            if(izamsCount is None):
+                izams = 0
+            
+            if(itamsCount is None):
+                itams = len(xcs) - 1
 
             # Create a linear space for Xc values
             tmp_xcs = np.linspace(1e-4, max_xc - 0.0015, self.totalValues)
