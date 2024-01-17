@@ -56,10 +56,8 @@ def percent_difference(value1, value2):
         raise ValueError("Value1 cannot be zero since it's the reference value.")
     return ((value2 - value1) / value1) * 100
 
-# Replace 'your_file.txt' with your file's name
 filename = 'test_results.txt'
 model_data = read_file(filename)
-#print(model_data)
 
 zorecValues, zorecErrors, zorecMassValues, zorecR_Masses, zorecVsini, zorecR_vsini  = zorec_functions.read_zorec("BayesianStarSolver/tests/zorecValues.txt")
 
@@ -71,10 +69,10 @@ plt.figure(figsize=(80, 40), dpi=400)
 for i, zorec_value in enumerate(zorecMassValues):
     model_key, closest_value = find_closest_model_value(zorec_value, model_data)
     # Plot zorec value
-    plt.plot(i, zorec_value, 'ro')  # 'ro' for red circle
+    plt.plot(i, zorec_value, 'ro')  
     plt.text(i, zorec_value, f'Zorec Mass: {zorec_value:.4f}', fontsize=8, verticalalignment='top', horizontalalignment='center')
     # Plot closest model value
-    plt.plot(i, closest_value, 'bo') # 'bo' for blue circle
+    plt.plot(i, closest_value, 'bo')
     plt.text(i, closest_value, f'{format_model_key(model_key)} - Model Mass: {closest_value:.4f}', fontsize=8, verticalalignment='bottom', horizontalalignment='center')
     
 
@@ -90,7 +88,7 @@ plt.figure(figsize=(80, 40), dpi=400)
 for i, zorec_value in enumerate(zorecMassValues):
     model_key, closest_value = find_closest_model_value(zorec_value, model_data)
     # Plot zorec value
-    plt.plot(i, zorec_value - closest_value, 'ro')  # 'ro' for red circle
+    plt.plot(i, zorec_value - closest_value, 'ro')  
     alignment = 'top' if i%2==0 else 'bottom'
     plt.text(i, zorec_value - closest_value, f'{format_model_key(model_key)} \n Star index: {i} \n Diff: {percent_difference(zorec_value, closest_value):.4f}%', fontsize=8, verticalalignment=alignment, horizontalalignment='center')
    
@@ -109,28 +107,20 @@ def get_color_from_value(values, cmap=cm.rainbow):
     norm = plt.Normalize(min(values), max(values))
     return cmap(norm(values))
 
-# Ensure /plots directory exists or create it
 if not os.path.exists('plots'):
     os.makedirs('plots')
 
-# Set the size of the plot and the DPI for high resolution
-plt.figure(figsize=(20, 10), dpi=300)  # You can adjust these values as needed
+plt.figure(figsize=(20, 10), dpi=300)  
 
-# Plot each model's mass values
 for model_key, (mass_values, _) in model_data.items():
     plt.plot(mass_values, label=model_key)
 
-# Plot the zorecMassValues for comparison
 plt.plot(zorecMassValues, label='Zorec Mass Values', linestyle='--')
 
-# Adding labels and title
 plt.xlabel('Index')
 plt.ylabel('Mass')
 plt.title('Mass Comparison')
 plt.legend()
 
-# Save the plot as a file
 plt.savefig('zorecComparisonValues.png')
-
-# Optionally, close the plot to free up memory
 plt.close()
