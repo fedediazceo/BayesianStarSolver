@@ -93,7 +93,26 @@ def estimateStellarParameters(parameters, nwalkers, runs, burnin, model, cost_fu
 
     samples = sampler.chain[:, burnin:, :].reshape((-1, ndim))
     
-    M_median = np.median(samples[:, 0])
-    Xc_median = np.median(samples[:, 1])
+
+    # a more generalized approach below
+    #M_median = np.median(samples[:, 0])
+    #Xc_median = np.median(samples[:, 1])
     
-    return samples, (M_median, Xc_median)
+    # Number of parameters
+    num_params = samples.shape[1]
+
+    # Initialize arrays to store the statistics
+    medians = np.zeros(num_params)
+    lower_errors = np.zeros(num_params)
+    upper_errors = np.zeros(num_params)
+
+    # Compute statistics for each parameter
+    for i in range(num_params):
+        medians[i], lower_errors[i], upper_errors[i] = np.percentile(samples[:, i], [50, 16, 84])
+
+    lower_errors = medians - lower_errors
+    upper_errors = upper_errors - medians
+
+    # for now: [0] Mass, [1] Xc
+
+    return samples, (medians[0], medians[1]), (lower_errors, upper_errors)

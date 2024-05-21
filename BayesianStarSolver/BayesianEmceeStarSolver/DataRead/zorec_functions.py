@@ -12,7 +12,7 @@ def read_zorec(filepath):
     """
     
     # Lists to store the extracted values
-    logT_L_pairs, e_logT_e_logL_pairs, zorecMassValues, zorecR_Masses, zorecVsini, zorecR_vsini = [], [], [], [], [], []
+    spectralType, logT_L_pairs, e_logT_e_logL_pairs, zorecMassValues, zorecE_Masses, zorecVsini, zorecR_vsini, zorecAgeValue, zorecE_Age = [], [], [], [], [], [], [], [], []
 
     # Process the file
     with open(filepath, "r") as file:
@@ -38,9 +38,15 @@ def read_zorec(filepath):
                 e_logT_e_logL_pairs.append((e_logT, e_logL))
 
                 zorecMassValues.append(mass)
-                zorecR_Masses.append(float(parts[7].strip()))
+                zorecE_Masses.append(float(parts[7].strip()))
+
+                zorecAgeValue.append(float(parts[8].strip()))
+                zorecE_Age.append(float(parts[9].strip()))
+
                 zorecVsini.append(float(parts[10].strip()))
                 zorecR_vsini.append(float(parts[11].strip()))
+
+                spectralType.append(parts[1].strip())
 
     # Calculate the converted values using the given formulas
     zorecValues = [(10**logT, 10**logL) for logT, logL in logT_L_pairs]
@@ -53,4 +59,4 @@ def read_zorec(filepath):
         for (logT, logL), (deltaLogT, deltaLogL) in zip(logT_L_pairs, e_logT_e_logL_pairs)
     ]
 
-    return zorecValues, zorecErrors, zorecMassValues, zorecR_Masses, zorecVsini, zorecR_vsini 
+    return spectralType, zorecValues, zorecErrors, zorecMassValues, zorecE_Masses, zorecVsini, zorecR_vsini, zorecAgeValue, zorecE_Age

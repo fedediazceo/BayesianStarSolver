@@ -278,13 +278,13 @@ def get_valid_density_parameters(grid):
     return parametersList
 
 def estimate_grid_density(subgrid, gridName):
-    # Define the Xc range and the desired coverage threshold
+    # define the Xc range and the desired coverage threshold
     xc_range = (0.0, 0.7)
     coverage_threshold_xc = 0.8  # 80%
 
     countCoverage = 0
     massLength = 0
-    # Iterate over each unique mass value
+    # iterate over each unique mass value
     for mass in subgrid['M'].unique():
         xc_values = subgrid[subgrid['M'] == mass]['Xc']
         xc_coverage = np.histogram(xc_values, bins=100, range=xc_range)[0] > 0
